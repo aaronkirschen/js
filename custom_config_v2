@@ -5,8 +5,10 @@
     let config = null;
 
     function log(level, ...args) {
-        if (!config || level === 'error') {
-            console[level || 'log'](...args);
+        if (!config) {
+            if (level === 'error' || level === 'warn') {
+                console[level || 'log'](...args);
+            }
             return;
         }
         const levels = ['debug', 'info', 'warn', 'error'];
@@ -49,41 +51,31 @@
             await loadYAML();
 
             const elements = document.querySelectorAll('div[data-react-props]');
-            log('debug', 'Found elements:', elements.length);
 
             for (const el of elements) {
                 try {
                     const rawProps = el.getAttribute('data-react-props');
-                    log('debug', 'Raw data-react-props:', rawProps);
 
                     const decodedProps = decodeHtml(rawProps);
-                    log('debug', 'Decoded data-react-props:', decodedProps);
 
                     const props = JSON.parse(decodedProps);
-                    log('debug', 'Parsed props:', props);
 
                     if (props.questions) {
-                        log('debug', 'Questions found:', props.questions.length);
                         props.questions.forEach((q, i) => {
-                            log('debug', `Question ${i}:`, q.label);
                         });
                     } else {
-                        log('debug', 'No questions found in props');
                     }
 
                     const question = props.questions?.find(q => q.label === CONFIG_LABEL);
 
                     if (question) {
-                        log('debug', 'Found question:', question);
                         const configYAML = extractYAMLFromHTML(question.text);
                         if (!configYAML) {
                             log('error', 'No YAML found in config HTML');
                             continue;
                         }
-
-                        log('debug', 'Extracted YAML:', configYAML);
                         config = validateYAML(configYAML);
-                        log('info', 'Config loaded:', config);
+                        log('debug', 'Config loaded:', config);
                         return config;
                     }
                 } catch (e) {
